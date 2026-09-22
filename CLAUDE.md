@@ -56,7 +56,9 @@ Viaggiatori e turisti di fascia medio-alta che cercano natura, tranquillità ed 
 - `src/pages/index.astro` — la pagina, composta dai componenti in `src/components/`:
   `Hero`, `Progetto`, `Esperienza`, `Masseria`, `News`.
 - `src/pages/news/[id].astro` — pagina di dettaglio di ogni news (generata solo se esistono news pubblicate).
-- `src/layouts/BaseLayout.astro` — `<head>`, SEO, Open Graph, font, header e footer.
+- `src/layouts/BaseLayout.astro` — `<head>`, SEO, Open Graph, dati strutturati, font, header e footer.
+- `src/pages/robots.txt.ts` — robots.txt con il link alla sitemap (generata da `@astrojs/sitemap`).
+- `src/components/JsonLd.astro` — blocco schema.org; le pagine possono passarne uno proprio con la prop `schema`.
 - `src/config/site.ts` — nome, luogo, voci di menu, dati legali, loghi del finanziamento. Da qui si cambiano i testi ricorrenti senza toccare i componenti.
 - `src/styles/global.css` — palette (calce, pietra, ulivo, vino), tipografia e classi comuni (`.container`, `.section`, `.eyebrow`, `.lead`, `.photo`).
 - `src/assets/images/` — foto placeholder, da sostituire con le foto vere mantenendo gli stessi nomi.
@@ -83,4 +85,10 @@ La sezione "News ed eventi" passa da sola dal messaggio di attesa all'elenco del
 - Foto vere al posto dei placeholder (stessi nomi file in `src/assets/images/`).
 - Testi confermati dal cliente: cercare `TODO: da confermare con il cliente`.
 - `site.legal.vatNumber` e ragione sociale completa.
-- Dominio definitivo: su Vercel il canonical e le Open Graph usano il dominio di produzione del progetto; con dominio proprio impostare la variabile d'ambiente `SITE_URL`.
+- Verificare il sito in Google Search Console e inviare la sitemap.
+
+## SEO (base tecnica, fatta il 22 settembre 2026)
+- Dominio: `https://www.masserialombardi.it` (senza www rimanda al www), impostato in `astro.config.mjs`; si può sovrascrivere con la variabile d'ambiente `SITE_URL`.
+- Attivi: canonical, Open Graph e Twitter card, `meta robots` (`index, follow, max-image-preview:large`), sitemap automatica, robots.txt con il link alla sitemap, dati strutturati (Organization, WebSite, TouristAttraction; le news aggiungono Article ed Event).
+- Ogni pagina nuova passa da `BaseLayout` e quindi eredita tutto. Le pagine da nascondere ai motori: prop `noindex` (come la 404).
+- Non ancora fatto, da valutare con il cliente: ricerca parole chiave, testi orientati alle ricerche reali, scheda Google Business Profile, dati di contatto e orari nei dati strutturati.

@@ -14,9 +14,47 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { title, date, eventDate, summary, cover, coverAlt } = entry.data;
 const { Content } = await render(entry);
+
+const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
+
+// Dati strutturati: un articolo e, se la news annuncia un appuntamento, anche l'evento.
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: title,
+      description: summary,
+      datePublished: date.toISOString(),
+      inLanguage: 'it-IT',
+      mainEntityOfPage: pageUrl,
+      publisher: { '@id': new URL('#organizzazione', Astro.site).toString() },
+    },
+    ...(eventDate
+      ? [
+          {
+            '@type': 'Event',
+            name: title,
+            description: summary,
+            startDate: eventDate.toISOString().slice(0, 10),
+            eventStatus: 'https://schema.org/EventScheduled',
+            url: pageUrl,
+            location: { '@id': new URL('#luogo', Astro.site).toString() },
+            organizer: { '@id': new URL('#organizzazione', Astro.site).toString() },
+          },
+        ]
+      : []),
+  ],
+};
 ---
 
-<BaseLayout title={`${title} · ${site.name}`} description={summary} image={cover} imageAlt={coverAlt}>
+<BaseLayout
+  title={`${title} · ${site.name}`}
+  description={summary}
+  image={cover}
+  imageAlt={coverAlt}
+  schema={schema}
+>
   <article class="article container">
     <a class="article__back" href="/#news">← News ed eventi</a>
 

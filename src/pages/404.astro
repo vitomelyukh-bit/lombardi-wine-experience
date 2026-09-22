@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../config/site';
 ---
 
-<BaseLayout title={`Pagina non trovata · ${site.name}`}>
+<BaseLayout title={`Pagina non trovata · ${site.name}`} noindex>
   <section class="not-found container">
     <p class="eyebrow">Errore 404</p>
     <h1>Questa pagina <em>non esiste</em></h1>

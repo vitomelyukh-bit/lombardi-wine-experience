@@ -1,0 +1,12 @@
+---
+/** Dati strutturati (schema.org) per i motori di ricerca. */
+interface Props {
+  schema: Record<string, unknown>;
+}
+const { schema } = Astro.props;
+
+// "<" viene reso sicuro: non può chiudere il tag script.
+const json = JSON.stringify(schema).replace(/</g, '\\u003c');
+---
+
+<script type="application/ld+json" is:inline set:html={json} />
