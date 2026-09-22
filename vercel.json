@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "lombardi-wine-experience.vercel.app" }],
+      "destination": "https://www.masserialombardi.it/$1",
+      "permanent": true
+    }
+  ]
+}
