@@ -1,0 +1,144 @@
+---
+import { Picture } from 'astro:assets';
+import hero from '../assets/images/hero.jpg';
+import { site } from '../config/site';
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__media photo">
+    <!-- TODO: da confermare con il cliente (foto definitiva della hero) -->
+    <Picture
+      src={hero}
+      alt="La masseria nel paesaggio della campagna di Putignano"
+      widths={[640, 960, 1280, 1920, 2400]}
+      sizes="100vw"
+      formats={['avif', 'webp']}
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+
+  <div class="hero__content container">
+    <h1 id="hero-title" class="hero__title">
+      Lombardi <em>Wine Experience</em>
+    </h1>
+    <p class="hero__place">{site.house}, {site.place}</p>
+  </div>
+
+  <a class="hero__next" href="#progetto">
+    <span>Scopri il progetto</span>
+    <span class="hero__next-line" aria-hidden="true"></span>
+  </a>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 100vh;
+    min-height: 100svh;
+    color: var(--calce);
+    background: var(--ulivo-scuro);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+  }
+
+  /* Velatura per la leggibilità del testo */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(to bottom, rgb(28 25 20 / 0.45), rgb(28 25 20 / 0) 28%),
+      linear-gradient(to top, rgb(28 25 20 / 0.62), rgb(28 25 20 / 0.12) 55%, rgb(28 25 20 / 0));
+  }
+
+  .hero__content {
+    padding-bottom: clamp(6.5rem, 16vh, 10rem);
+  }
+
+  .hero__title {
+    color: inherit;
+    font-size: clamp(3.25rem, 11vw, 9rem);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: -0.015em;
+  }
+
+  .hero__title em {
+    display: block;
+    font-weight: 300;
+  }
+
+  .hero__place {
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.92;
+  }
+
+  .hero__next {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.5rem, 4vh, 2.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    transform: translateX(-50%);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.85;
+    transition: opacity 0.3s var(--ease);
+  }
+
+  .hero__next:hover {
+    opacity: 1;
+  }
+
+  .hero__next-line {
+    width: 1px;
+    height: 2.75rem;
+    background: linear-gradient(to bottom, currentColor, transparent);
+  }
+
+  @media (min-width: 56em) {
+    .hero__next {
+      left: auto;
+      right: var(--gutter);
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__title,
+    .hero__place {
+      animation: rise 1.4s var(--ease) both;
+    }
+
+    .hero__place {
+      animation-delay: 0.25s;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(1.25rem);
+      }
+    }
+  }
+</style>

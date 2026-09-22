@@ -1,0 +1,49 @@
+---
+/** Il nome come marchio tipografico, in attesa di un logo. */
+interface Props {
+  size?: 'sm' | 'lg';
+}
+const { size = 'sm' } = Astro.props;
+---
+
+<span class:list={['wordmark', `wordmark--${size}`]}>
+  <span class="wordmark__name">Lombardi</span>
+  <span class="wordmark__sub">Wine Experience</span>
+</span>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1;
+    color: inherit;
+  }
+
+  .wordmark__name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.75rem;
+    letter-spacing: 0.01em;
+  }
+
+  .wordmark__sub {
+    margin-top: 0.35rem;
+    padding-left: 0.1em;
+    font-family: var(--font-text);
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+  }
+
+  .wordmark--lg .wordmark__name {
+    font-size: clamp(2.75rem, 6vw, 3.75rem);
+  }
+
+  .wordmark--lg .wordmark__sub {
+    margin-top: 0.6rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+  }
+</style>

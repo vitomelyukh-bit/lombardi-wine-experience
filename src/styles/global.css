@@ -1,0 +1,235 @@
+/* ------------------------------------------------------------------
+   Lombardi Wine Experience — stili globali
+   Palette: calce, pietra, ulivo, vino.
+   Font: Cormorant Garamond (titoli) e Jost (testo), entrambi SIL OFL.
+   ------------------------------------------------------------------ */
+
+:root {
+  /* Colori */
+  --calce: #f3efe7;
+  --calce-scura: #e9e2d5;
+  --pietra: #d4cab8;
+  --pietra-scura: #8b806e;
+  --ulivo: #646b4d;
+  --ulivo-scuro: #33382b;
+  --vino: #6a2a35;
+  --vino-scuro: #36161c;
+  --inchiostro: #26221d;
+  --testo: #3b362f;
+  --testo-tenue: #675f53;
+
+  /* Font */
+  --font-display: 'Cormorant Garamond Variable', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-text: 'Jost Variable', 'Jost', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Misure */
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --max: 80rem;
+  --section-space: clamp(5.5rem, 13vw, 11rem);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Reset essenziale */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background: var(--calce);
+  color: var(--testo);
+  font-family: var(--font-text);
+  font-size: 1.0625rem;
+  font-weight: 380;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+@media (min-width: 64em) {
+  body {
+    font-size: 1.125rem;
+  }
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+::selection {
+  background: var(--vino);
+  color: var(--calce);
+}
+
+/* Tipografia */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--inchiostro);
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+h3 {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+h1 em,
+h2 em,
+h3 em {
+  font-style: italic;
+}
+
+p {
+  text-wrap: pretty;
+  max-width: 36em;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  margin-bottom: 1.75rem;
+  font-family: var(--font-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--vino);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 2.25rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.lead {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--inchiostro);
+}
+
+/* Layout */
+.container {
+  width: min(100% - 2 * var(--gutter), var(--max));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--section-space);
+}
+
+.stack > * + * {
+  margin-top: 1.25em;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--vino);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  padding-bottom: 0.35em;
+  transition: border-color 0.3s var(--ease);
+}
+
+.text-link:hover {
+  border-color: currentColor;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--inchiostro);
+  color: var(--calce);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Foto: leggero riquadro di calce mentre caricano */
+.photo {
+  background: var(--calce-scura);
+}
+
+.photo picture,
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+main:focus {
+  outline: none;
+}

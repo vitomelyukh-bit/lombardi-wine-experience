@@ -1,0 +1,236 @@
+---
+import Wordmark from './Wordmark.astro';
+import { site } from '../config/site';
+
+interface Props {
+  variant?: 'overlay' | 'solid';
+}
+const { variant = 'solid' } = Astro.props;
+---
+
+<header class:list={['site-header', `site-header--${variant}`]}>
+  <div class="site-header__inner container">
+    <a href="/" class="site-header__brand" aria-label={`${site.name}, torna all’inizio`}>
+      <Wordmark />
+    </a>
+
+    <nav class="nav" aria-label="Principale" data-nav>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list" hidden data-nav-toggle>
+        <span class="nav__toggle-label" data-nav-label>Menu</span>
+        <span class="nav__toggle-icon" aria-hidden="true"></span>
+      </button>
+      <ul class="nav__list" id="nav-list">
+        {
+          site.nav.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  // Menu mobile: senza JavaScript i link restano visibili in riga.
+  const nav = document.querySelector<HTMLElement>('[data-nav]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const label = document.querySelector<HTMLElement>('[data-nav-label]');
+
+  if (nav && toggle && label) {
+    nav.dataset.enhanced = '';
+    toggle.hidden = false;
+
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      label.textContent = open ? 'Chiudi' : 'Menu';
+      nav.toggleAttribute('data-open', open);
+      document.documentElement.classList.toggle('nav-open', open);
+    };
+
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && nav.hasAttribute('data-open')) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    window.matchMedia('(min-width: 56em)').addEventListener('change', () => setOpen(false));
+  }
+</script>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: 20;
+    color: var(--inchiostro);
+  }
+
+  .site-header--overlay {
+    position: absolute;
+    inset: 0 0 auto;
+    color: var(--calce);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-block: 1.5rem;
+  }
+
+  @media (min-width: 56em) {
+    .site-header__inner {
+      padding-block: 2.25rem;
+    }
+  }
+
+  .site-header__brand {
+    position: relative;
+    z-index: 2;
+    text-decoration: none;
+  }
+
+  .nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nav__list a {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding-block: 0.5rem;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s var(--ease);
+  }
+
+  .nav__list a:hover {
+    border-color: currentColor;
+  }
+
+  @media (min-width: 56em) {
+    .nav__list {
+      gap: 2.5rem;
+    }
+  }
+
+  /* Menu mobile, attivo solo con JavaScript */
+  .nav__toggle {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .nav__toggle[hidden] {
+    display: none;
+  }
+
+  .nav__toggle-icon {
+    position: relative;
+    width: 1.5rem;
+    height: 1px;
+    background: currentColor;
+    transition: background-color 0.3s var(--ease);
+  }
+
+  .nav__toggle-icon::before,
+  .nav__toggle-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transition: transform 0.3s var(--ease);
+  }
+
+  .nav__toggle-icon::before {
+    transform: translateY(-5px);
+  }
+
+  .nav__toggle-icon::after {
+    transform: translateY(5px);
+  }
+
+  [data-open] .nav__toggle-icon {
+    background: transparent;
+  }
+
+  [data-open] .nav__toggle-icon::before {
+    transform: rotate(45deg);
+  }
+
+  [data-open] .nav__toggle-icon::after {
+    transform: rotate(-45deg);
+  }
+
+  @media (max-width: 55.99em) {
+    [data-enhanced] .nav__list {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.75rem;
+      padding: 6rem var(--gutter) 4rem;
+      background: var(--calce);
+      color: var(--inchiostro);
+      visibility: hidden;
+      opacity: 0;
+      transition:
+        opacity 0.35s var(--ease),
+        visibility 0s linear 0.35s;
+    }
+
+    [data-enhanced][data-open] .nav__list {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.35s var(--ease);
+    }
+
+    [data-enhanced] .nav__list a {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* Con il menu aperto il marchio e il pulsante passano al colore scuro */
+    :global(.nav-open) .site-header {
+      color: var(--inchiostro);
+    }
+
+    :global(.nav-open) {
+      overflow: hidden;
+    }
+  }
+
+  @media (min-width: 56em) {
+    .nav__toggle {
+      display: none !important;
+    }
+  }
+</style>

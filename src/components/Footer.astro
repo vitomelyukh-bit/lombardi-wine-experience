@@ -1,0 +1,121 @@
+---
+import { Image } from 'astro:assets';
+import Wordmark from './Wordmark.astro';
+import { site } from '../config/site';
+
+const { legal, funding } = site;
+const year = new Date().getFullYear();
+const hasFunding = funding.note !== '' || funding.logos.length > 0;
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__top">
+      <a href="/" class="site-footer__brand" aria-label={`${site.name}, torna all’inizio`}>
+        <Wordmark size="lg" />
+      </a>
+      <address class="site-footer__place">
+        {site.house}<br />
+        {site.placeFull}
+      </address>
+    </div>
+
+    {
+      hasFunding && (
+        <section class="site-footer__funding" aria-label="Finanziamento pubblico">
+          {funding.note && <p>{funding.note}</p>}
+          {funding.logos.length > 0 && (
+            <ul class="site-footer__logos">
+              {funding.logos.map((logo) => (
+                <li>
+                  {logo.href ? (
+                    <a href={logo.href} rel="noopener">
+                      <Image src={logo.src} alt={logo.alt} height={56} />
+                    </a>
+                  ) : (
+                    <Image src={logo.src} alt={logo.alt} height={56} />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )
+    }
+
+    <div class="site-footer__legal">
+      <!-- TODO: da confermare con il cliente (ragione sociale completa, P.IVA, sede legale) -->
+      <p>
+        © {year}
+        {legal.company}
+        {legal.vatNumber && <span> · P.IVA {legal.vatNumber}</span>}
+        {legal.address && <span> · {legal.address}</span>}
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-block: clamp(4.5rem, 10vw, 7rem) 2.5rem;
+    background: var(--vino-scuro);
+    color: color-mix(in srgb, var(--calce) 82%, transparent);
+    font-size: 0.9375rem;
+  }
+
+  .site-footer__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2.5rem;
+  }
+
+  .site-footer__brand {
+    color: var(--calce);
+    text-decoration: none;
+  }
+
+  .site-footer__place {
+    font-style: normal;
+    line-height: 1.8;
+  }
+
+  @media (min-width: 40em) {
+    .site-footer__place {
+      text-align: right;
+    }
+  }
+
+  .site-footer__funding {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding: 1.75rem;
+    background: var(--calce);
+    color: var(--testo);
+    font-size: 0.8125rem;
+  }
+
+  .site-footer__logos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem 2.5rem;
+    margin-top: 1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__logos :global(img) {
+    width: auto;
+    height: 3.5rem;
+  }
+
+  .site-footer__legal {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--calce) 18%, transparent);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--calce) 64%, transparent);
+  }
+</style>

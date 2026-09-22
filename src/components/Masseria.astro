@@ -1,0 +1,173 @@
+---
+import { Picture } from 'astro:assets';
+import masseria from '../assets/images/masseria.jpg';
+
+// TODO: da confermare con il cliente (servizi previsti e tempi di apertura)
+const pillars = [
+  {
+    title: 'Ospitalità',
+    text: 'Camere per fermarsi qualche giorno e vivere la campagna con i suoi tempi.',
+    status: 'In arrivo',
+  },
+  {
+    title: 'Spa',
+    text: 'Uno spazio dedicato al benessere e al riposo.',
+    status: 'In arrivo',
+  },
+  {
+    title: 'Vino',
+    text: 'La Wine Experience, da cui il progetto è partito.',
+    status: 'Già attiva',
+    href: '#esperienza',
+  },
+  {
+    title: 'Eventi privati',
+    text: 'Piccole celebrazioni e matrimoni in Puglia, per chi cerca un luogo raccolto.',
+    status: 'In arrivo',
+  },
+];
+---
+
+<section class="masseria section" id="masseria" aria-labelledby="masseria-title">
+  <div class="container">
+    <div class="masseria__intro">
+      <p class="eyebrow">La Masseria · dal 2027</p>
+      <h2 id="masseria-title">Una masseria che si prepara <em>ad accogliere</em></h2>
+      <!-- TODO: da confermare con il cliente (descrizione della masseria e del contesto) -->
+      <p class="masseria__lead">
+        Masseria Lombardi è un progetto di famiglia. Dal 2027 aprirà le sue porte a chi cerca natura, silenzio e tempo
+        per sé: camere, spa, vino ed eventi, in un unico luogo.
+      </p>
+    </div>
+  </div>
+
+  <div class="masseria__photo photo">
+    <!-- TODO: da confermare con il cliente (foto degli esterni della masseria) -->
+    <Picture
+      src={masseria}
+      alt="La masseria vista dall'esterno, tra pietra, calce e ulivi"
+      widths={[640, 960, 1280, 1920, 2400]}
+      sizes="100vw"
+      formats={['avif', 'webp']}
+    />
+  </div>
+
+  <div class="container">
+    <ul class="masseria__pillars">
+      {
+        pillars.map((pillar) => (
+          <li class="pillar">
+            <p class:list={['pillar__status', { 'pillar__status--active': pillar.href }]}>{pillar.status}</p>
+            <h3>{pillar.title}</h3>
+            <p class="pillar__text">{pillar.text}</p>
+            {pillar.href && (
+              <a class="pillar__link" href={pillar.href}>
+                Scopri l’esperienza
+              </a>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .masseria {
+    background: var(--ulivo-scuro);
+    color: color-mix(in srgb, var(--calce) 86%, transparent);
+  }
+
+  .masseria h2,
+  .masseria h3 {
+    color: var(--calce);
+  }
+
+  .masseria .eyebrow {
+    color: var(--pietra);
+  }
+
+  .masseria__intro {
+    max-width: 46rem;
+  }
+
+  .masseria__lead {
+    margin-top: 1.75rem;
+  }
+
+  .masseria__photo {
+    margin-block: clamp(3.5rem, 8vw, 6rem);
+    aspect-ratio: 4 / 3;
+    background: var(--ulivo);
+  }
+
+  @media (min-width: 40em) {
+    .masseria__photo {
+      aspect-ratio: 16 / 7;
+    }
+  }
+
+  .masseria__pillars {
+    display: grid;
+    gap: 2.75rem 2.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40em) {
+    .masseria__pillars {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 64em) {
+    .masseria__pillars {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .pillar {
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--calce) 22%, transparent);
+  }
+
+  .pillar__status {
+    margin-bottom: 1.1rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pietra);
+    opacity: 0.8;
+  }
+
+  .pillar__status--active {
+    color: #e3b8bd;
+    opacity: 1;
+  }
+
+  .pillar h3 {
+    margin-bottom: 0.75rem;
+  }
+
+  .pillar__text {
+    font-size: 1rem;
+  }
+
+  .pillar__link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--calce);
+    border-bottom: 1px solid color-mix(in srgb, var(--calce) 40%, transparent);
+    padding-bottom: 0.3em;
+  }
+
+  .pillar__link:hover {
+    border-color: var(--calce);
+  }
+</style>

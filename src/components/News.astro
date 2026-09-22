@@ -1,0 +1,144 @@
+---
+import { Picture } from 'astro:assets';
+import { getPublishedNews } from '../lib/news';
+import { formatDate, isoDate } from '../lib/format';
+
+const news = await getPublishedNews();
+---
+
+<section class="news section" id="news" aria-labelledby="news-title">
+  <div class="container">
+    <p class="eyebrow">Appuntamenti</p>
+    <h2 id="news-title">News ed eventi</h2>
+
+    {
+      news.length === 0 ? (
+        <div class="news__empty">
+          <span class="news__ornament" aria-hidden="true" />
+          <p>I prossimi appuntamenti saranno pubblicati qui.</p>
+        </div>
+      ) : (
+        <ul class="news__list">
+          {news.map((entry) => (
+            <li class="news-card">
+              {entry.data.cover && (
+                <div class="news-card__photo photo">
+                  <Picture
+                    src={entry.data.cover}
+                    alt={entry.data.coverAlt ?? ''}
+                    widths={[480, 720, 960]}
+                    sizes="(min-width: 56em) 30vw, 90vw"
+                    formats={['avif', 'webp']}
+                  />
+                </div>
+              )}
+              <p class="news-card__meta">
+                {entry.data.eventDate ? (
+                  <>
+                    Evento del <time datetime={isoDate(entry.data.eventDate)}>{formatDate(entry.data.eventDate)}</time>
+                  </>
+                ) : (
+                  <time datetime={isoDate(entry.data.date)}>{formatDate(entry.data.date)}</time>
+                )}
+              </p>
+              <h3>
+                <a href={`/news/${entry.id}/`}>{entry.data.title}</a>
+              </h3>
+              <p class="news-card__summary">{entry.data.summary}</p>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .news__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 46rem;
+    margin: clamp(3rem, 6vw, 4.5rem) auto 0;
+    padding: clamp(3.5rem, 8vw, 6rem) 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--pietra-scura) 35%, transparent);
+    text-align: center;
+  }
+
+  .news__empty p {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--inchiostro);
+  }
+
+  .news__ornament {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--vino);
+    transform: rotate(45deg);
+  }
+
+  .news__list {
+    display: grid;
+    gap: 3rem 2.5rem;
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40em) {
+    .news__list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 64em) {
+    .news__list {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .news-card {
+    position: relative;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--pietra-scura) 40%, transparent);
+  }
+
+  .news-card__photo {
+    aspect-ratio: 3 / 2;
+    margin-bottom: 1.5rem;
+  }
+
+  .news-card__meta {
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vino);
+  }
+
+  .news-card h3 a {
+    text-decoration: none;
+  }
+
+  /* Tutta la card è cliccabile */
+  .news-card h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .news-card:hover h3 a {
+    text-decoration: underline;
+  }
+
+  .news-card__summary {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    color: var(--testo-tenue);
+  }
+</style>

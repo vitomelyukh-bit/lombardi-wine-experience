@@ -1,0 +1,74 @@
+---
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+import '@fontsource-variable/jost/wght.css';
+import '../styles/global.css';
+
+import cormorantLatin from '@fontsource-variable/cormorant-garamond/files/cormorant-garamond-latin-wght-normal.woff2?url';
+import jostLatin from '@fontsource-variable/jost/files/jost-latin-wght-normal.woff2?url';
+
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../config/site';
+import defaultShareImage from '../assets/images/hero.jpg';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Immagine per la condivisione (Open Graph). Di default la foto della hero. */
+  image?: ImageMetadata;
+  imageAlt?: string;
+  /** "overlay": header trasparente sopra la foto della hero; "solid": header su fondo chiaro. */
+  headerVariant?: 'overlay' | 'solid';
+}
+
+const {
+  title = site.title,
+  description = site.description,
+  image = defaultShareImage,
+  imageAlt = `${site.name}, ${site.house}`,
+  headerVariant = 'solid',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const shareImage = await getImage({ src: image, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+const shareImageUrl = new URL(shareImage.src, Astro.site);
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#f3efe7" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={cormorantLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={jostLatin} as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+    <Header variant={headerVariant} />
+    <main id="contenuto" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

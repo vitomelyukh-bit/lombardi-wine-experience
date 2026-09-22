@@ -1,0 +1,121 @@
+---
+import { Picture } from 'astro:assets';
+import eventi from '../assets/images/esperienza-eventi.jpg';
+import formazione from '../assets/images/esperienza-formazione.jpg';
+---
+
+<section class="esperienza section" id="esperienza" aria-labelledby="esperienza-title">
+  <div class="container">
+    <header class="esperienza__intro">
+      <p class="eyebrow">L’esperienza</p>
+      <h2 id="esperienza-title">Eventi e formazione, <em>attorno al vino</em></h2>
+      <p class="esperienza__lead">
+        Due modi di vivere il vino: ritrovarsi e imparare. Entrambi partono dal torchio e dalla masseria che lo custodisce.
+      </p>
+    </header>
+
+    <div class="esperienza__blocks">
+      <article class="esperienza__block">
+        <!-- TODO: da confermare con il cliente (foto degli eventi) -->
+        <div class="photo">
+          <Picture
+            src={eventi}
+            alt="Una serata dedicata al vino in masseria"
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 56em) 42vw, 90vw"
+            formats={['avif', 'webp']}
+          />
+        </div>
+        <h3>Eventi</h3>
+        <!-- TODO: da confermare con il cliente (tipi di evento, frequenza, a chi si rivolgono) -->
+        <p>
+          Serate e incontri dedicati al vino, nella cornice della masseria. Occasioni per assaggiare, conversare,
+          conoscere.
+        </p>
+      </article>
+
+      <article class="esperienza__block">
+        <!-- TODO: da confermare con il cliente (foto della formazione) -->
+        <div class="photo">
+          <Picture
+            src={formazione}
+            alt="Calici e appunti su un tavolo, durante un incontro di formazione"
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 56em) 42vw, 90vw"
+            formats={['avif', 'webp']}
+          />
+        </div>
+        <h3>Formazione</h3>
+        <!-- TODO: da confermare con il cliente (percorsi, livelli, docenti, eventuali attestati) -->
+        <p>
+          Percorsi per avvicinarsi al vino e per approfondirlo: come si osserva, come si assaggia, come si racconta.
+          Per chi comincia e per chi vuole andare oltre.
+        </p>
+      </article>
+    </div>
+
+    <p class="esperienza__note">
+      Il calendario degli appuntamenti sarà pubblicato nella sezione
+      <a href="#news">News ed eventi</a>.
+    </p>
+  </div>
+</section>
+
+<style>
+  .esperienza {
+    background: var(--calce-scura);
+  }
+
+  .esperienza__intro {
+    max-width: 44rem;
+  }
+
+  .esperienza__lead {
+    margin-top: 1.75rem;
+    color: var(--testo);
+  }
+
+  .esperienza__blocks {
+    display: grid;
+    gap: clamp(3.5rem, 8vw, 5rem);
+    margin-top: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .esperienza__block .photo {
+    aspect-ratio: 4 / 5;
+    margin-bottom: clamp(1.75rem, 3vw, 2.25rem);
+  }
+
+  .esperienza__block h3 {
+    margin-bottom: 0.9rem;
+  }
+
+  .esperienza__block p {
+    max-width: 28em;
+  }
+
+  .esperienza__note {
+    margin-top: clamp(3.5rem, 8vw, 6rem);
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in srgb, var(--pietra-scura) 40%, transparent);
+    font-size: 0.9375rem;
+    color: var(--testo-tenue);
+    max-width: none;
+  }
+
+  .esperienza__note a {
+    color: var(--vino);
+  }
+
+  @media (min-width: 40em) {
+    .esperienza__blocks {
+      grid-template-columns: 1fr 1fr;
+      column-gap: clamp(1.5rem, 5vw, 5rem);
+    }
+
+    /* Il secondo blocco scende un poco, per dare ritmo */
+    .esperienza__block:nth-child(2) {
+      margin-top: clamp(4rem, 10vw, 9rem);
+    }
+  }
+</style>

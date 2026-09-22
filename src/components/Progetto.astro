@@ -1,0 +1,108 @@
+---
+import { Picture } from 'astro:assets';
+import torchio from '../assets/images/torchio.jpg';
+import torchioDettaglio from '../assets/images/torchio-dettaglio.jpg';
+---
+
+<section class="progetto section" id="progetto" aria-labelledby="progetto-title">
+  <div class="progetto__grid container">
+    <div class="progetto__text">
+      <p class="eyebrow">Il progetto</p>
+      <h2 id="progetto-title">Tutto è cominciato <em>da un torchio</em></h2>
+
+      <div class="progetto__body stack">
+        <!-- TODO: da confermare con il cliente (storia del torchio: epoca, uso originario, come e da chi è stato restaurato) -->
+        <p class="lead">Tra le stanze della masseria c’era un antico torchio. Lo abbiamo restaurato, pezzo dopo pezzo.</p>
+        <p>
+          Da quel lavoro è nata un’idea semplice: fare del torchio il centro di uno spazio dedicato al vino. Un luogo
+          in cui ritrovarsi, assaggiare, imparare.
+        </p>
+        <p>
+          Così è nata la Lombardi Wine Experience. È il primo capitolo di Masseria Lombardi, quello da cui prende forma
+          tutto il resto.
+        </p>
+      </div>
+    </div>
+
+    <div class="progetto__media">
+      <figure class="progetto__main">
+        <!-- TODO: da confermare con il cliente (foto del torchio restaurato) -->
+        <div class="photo">
+          <Picture
+            src={torchio}
+            alt="L’antico torchio della masseria dopo il restauro"
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 56em) 40vw, 90vw"
+            formats={['avif', 'webp']}
+          />
+        </div>
+        <figcaption>Il torchio, dopo il restauro.</figcaption>
+      </figure>
+      <div class="progetto__detail photo">
+        <Picture
+          src={torchioDettaglio}
+          alt="Dettaglio del torchio: legno, ferro e pietra"
+          widths={[320, 480, 720]}
+          sizes="(min-width: 56em) 18vw, 45vw"
+          formats={['avif', 'webp']}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .progetto__grid {
+    display: grid;
+    gap: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .progetto__body {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .progetto__media {
+    position: relative;
+    padding-bottom: 18%;
+  }
+
+  .progetto__main {
+    width: 86%;
+    margin-left: auto;
+  }
+
+  .progetto__main .photo {
+    aspect-ratio: 4 / 5;
+  }
+
+  .progetto__main figcaption {
+    margin-top: 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--testo-tenue);
+  }
+
+  .progetto__detail {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 44%;
+    aspect-ratio: 1;
+    outline: clamp(0.5rem, 1.2vw, 0.9rem) solid var(--calce);
+  }
+
+  @media (min-width: 56em) {
+    .progetto__grid {
+      grid-template-columns: repeat(12, 1fr);
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .progetto__text {
+      grid-column: 1 / span 5;
+    }
+
+    .progetto__media {
+      grid-column: 7 / span 6;
+    }
+  }
+</style>
