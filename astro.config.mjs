@@ -10,6 +10,10 @@ import vercel from '@astrojs/vercel';
 // Si può cambiare senza toccare il codice con la variabile d'ambiente SITE_URL.
 const site = process.env.SITE_URL ?? 'https://www.masserialombardi.it';
 
+// Il pannello /keystatic c'è in locale (`astro dev`) e, online, solo quando Keystatic Cloud è
+// collegato (PUBLIC_KEYSTATIC_PROJECT): senza, non saprebbe dove salvare le news.
+const keystaticOn = Boolean(process.env.PUBLIC_KEYSTATIC_PROJECT) || process.argv.includes('dev');
+
 export default defineConfig({
   site,
   // Le pagine restano statiche; solo il pannello /keystatic gira su Vercel come funzione.
@@ -17,8 +21,7 @@ export default defineConfig({
   adapter: vercel(),
   trailingSlash: 'ignore',
   integrations: [
-    react(),
-    keystatic(),
+    ...(keystaticOn ? [react(), keystatic()] : []),
     sitemap({ filter: (page) => !page.includes('/keystatic') }),
   ],
 });
