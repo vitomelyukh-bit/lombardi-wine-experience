@@ -65,6 +65,21 @@ Viaggiatori e turisti di fascia medio-alta che cercano natura, tranquillità ed 
 - Ogni componente ha i propri stili in fondo al file (`<style>` con scope automatico di Astro).
 
 ## Aggiungere una news o un evento
+Dal pannello **/keystatic** (`keystatic.config.ts`): titolo, breve descrizione, foto con la frase
+«cosa si vede», data di pubblicazione, data dell'evento (facoltativa), descrizione completa
+(facoltativa), «Bozza». Salvando, il pannello scrive `src/content/news/<indirizzo>.md` e la foto in
+`src/assets/images/news/<indirizzo>/`; online fa un commit su GitHub e Vercel ripubblica il sito.
+
+- In locale (`npm run dev`, http://localhost:4321/keystatic) salva i file su questo computer.
+- Online usa **Keystatic Cloud**: il cliente entra con la sua email (gratis fino a 3 persone). Il
+  pannello c'è online solo se su Vercel è impostata `PUBLIC_KEYSTATIC_PROJECT` («team/progetto»
+  di keystatic.cloud, con il repository collegato); senza, `astro.config.mjs` non lo monta.
+- Il sito resta statico: solo /keystatic e /api/keystatic girano su Vercel come funzione
+  (adattatore `@astrojs/vercel`). robots.txt li esclude, la sitemap pure.
+- L'adattatore ignora i reindirizzamenti di `vercel.json`: il passaggio da .vercel.app al dominio
+  lo rimette `scripts/vercel-host-redirect.mjs` dopo il build (`npm run build`).
+
+A mano, senza pannello:
 1. Duplicare `src/content/news/esempio.md` e rinominarlo (il nome del file diventa l'indirizzo: `serata-vendemmia.md` → `/news/serata-vendemmia/`).
 2. Compilare `title`, `date`, `summary`, se serve `eventDate`, `cover` e `coverAlt`.
 3. Togliere `draft: true` (o metterlo a `false`).
