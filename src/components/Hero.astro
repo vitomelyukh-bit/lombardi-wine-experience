@@ -6,12 +6,11 @@ import { site } from '../config/site';
 
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero__media photo">
-    <!-- TODO: da confermare con il cliente (foto definitiva della hero) -->
     <Picture
       src={hero}
-      alt="La masseria nel paesaggio della campagna di Putignano"
+      alt="La stanza in pietra della masseria con l’antico torchio in legno"
       widths={[640, 960, 1280, 1920, 2400]}
-      sizes="100vw"
+      sizes="(orientation: portrait) 180svh, 100vw"
       formats={['avif', 'webp']}
       loading="eager"
       fetchpriority="high"
