@@ -65,19 +65,24 @@ Viaggiatori e turisti di fascia medio-alta che cercano natura, tranquillità ed 
 - Ogni componente ha i propri stili in fondo al file (`<style>` con scope automatico di Astro).
 
 ## Aggiungere una news o un evento
-Dal pannello **/keystatic** (`keystatic.config.ts`): titolo, breve descrizione, foto con la frase
-«cosa si vede», data di pubblicazione, data dell'evento (facoltativa), descrizione completa
-(facoltativa), «Bozza». Salvando, il pannello scrive `src/content/news/<indirizzo>.md` e la foto in
-`src/assets/images/news/<indirizzo>/`; online fa un commit su GitHub e Vercel ripubblica il sito.
+Dal pannello **/admin** (`src/pages/admin/`, `src/pages/api/admin/`, `src/lib/admin/`): si entra con
+una password, si vedono le news, se ne crea una nuova, si modifica o si cancella. Campi: titolo,
+breve descrizione, foto con la frase «cosa si vede», data, data dell'evento, descrizione, bozza.
 
-- In locale (`npm run dev`, http://localhost:4321/keystatic) salva i file su questo computer.
-- Online usa **Keystatic Cloud**: il cliente entra con la sua email (gratis fino a 3 persone). Il
-  pannello c'è online solo se su Vercel è impostata `PUBLIC_KEYSTATIC_PROJECT` («team/progetto»
-  di keystatic.cloud, con il repository collegato); senza, `astro.config.mjs` non lo monta.
-- Il sito resta statico: solo /keystatic e /api/keystatic girano su Vercel come funzione
-  (adattatore `@astrojs/vercel`). robots.txt li esclude, la sitemap pure.
+- Ogni salvataggio è **un commit su main** (API di GitHub): `src/content/news/<indirizzo>.md` e la
+  foto in `src/assets/images/news/<indirizzo>/`. Vercel ripubblica il sito in un paio di minuti.
+- La foto la riduce il browser prima di caricarla (lato lungo 2400 px, JPEG): resta sotto il limite
+  di Vercel (4,5 MB) e perde i dati dello scatto, posizione compresa.
+- Impostazioni su Vercel: `ADMIN_PASSWORD` (almeno 8 caratteri) e `GITHUB_TOKEN` (token
+  «fine-grained» solo su questo repository, permesso Contents: lettura e scrittura). Facoltative:
+  `GITHUB_REPO`, `GITHUB_BRANCH`. Senza le due obbligatorie /admin dice che non è attivo.
+- Accesso: un cookie firmato, solo dopo la password, valido 30 giorni. Cambiare la password chiude
+  tutte le sessioni. Il sito pubblico resta senza cookie.
+- Il sito resta statico: solo /admin e /api/admin girano su Vercel come funzione (adattatore
+  `@astrojs/vercel`). robots.txt e sitemap li escludono.
 - L'adattatore ignora i reindirizzamenti di `vercel.json`: il passaggio da .vercel.app al dominio
   lo rimette `scripts/vercel-host-redirect.mjs` dopo il build (`npm run build`).
+- Prove in locale senza toccare il repository: `GITHUB_API` punta a un finto GitHub.
 
 A mano, senza pannello:
 1. Duplicare `src/content/news/esempio.md` e rinominarlo (il nome del file diventa l'indirizzo: `serata-vendemmia.md` → `/news/serata-vendemmia/`).
@@ -91,7 +96,7 @@ La sezione "News ed eventi" passa da sola dal messaggio di attesa all'elenco del
 - P.IVA e ragione sociale: `site.legal`. In Italia la P.IVA va indicata nella home page del sito di una società.
 
 ## Regole da rispettare
-- Niente cookie, analytics o tracciamento. I font sono self-hosted (Fontsource, licenza SIL OFL): non usare Google Fonts via CDN, chiamerebbe un server esterno.
+- Niente cookie, analytics o tracciamento sul sito pubblico (il pannello /admin ha solo il suo cookie di accesso). I font sono self-hosted (Fontsource, licenza SIL OFL): non usare Google Fonts via CDN, chiamerebbe un server esterno.
 - Non inventare dati concreti (prezzi, durate, numeri, date, premi). Dove manca un'informazione, testo sobrio e commento `<!-- TODO: da confermare con il cliente (...) -->`.
 - I commenti TODO restano visibili nel sorgente della pagina pubblicata: vanno risolti prima di andare online.
 - Immagini sempre tramite `astro:assets` (`<Image>` / `<Picture>`), con `alt` descrittivo.

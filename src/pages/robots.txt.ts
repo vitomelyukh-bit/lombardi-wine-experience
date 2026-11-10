@@ -6,8 +6,8 @@ export const GET: APIRoute = ({ site }) => {
     'User-agent: *',
     'Allow: /',
     // Il pannello delle news non va nei risultati di ricerca.
-    'Disallow: /keystatic',
-    'Disallow: /api/keystatic',
+    'Disallow: /admin',
+    'Disallow: /api/admin',
     '',
     `Sitemap: ${new URL('sitemap-index.xml', site)}`,
     '',

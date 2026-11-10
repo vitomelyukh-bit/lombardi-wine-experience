@@ -5,7 +5,7 @@ import { z } from 'astro/zod';
 /**
  * News ed eventi: un file Markdown per ogni news in src/content/news/.
  * Il nome del file diventa l'indirizzo della pagina (es. vendemmia-2027.md → /news/vendemmia-2027/).
- * Si scrivono dal pannello /keystatic (keystatic.config.ts) o a mano.
+ * Si scrivono dal pannello /admin (src/lib/admin/) o a mano.
  */
 const news = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/news' }),

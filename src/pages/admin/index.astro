@@ -1,0 +1,446 @@
+---
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/jost/wght.css';
+import '../../styles/global.css';
+import { isConfigured, isLoggedIn } from '../../lib/admin/auth';
+import { hasToken, listNewsFiles } from '../../lib/admin/github';
+import { fromMarkdown, type NewsForm } from '../../lib/admin/news-file';
+
+// Pannello delle news: una password (ADMIN_PASSWORD) e un token GitHub (GITHUB_TOKEN) su Vercel.
+// Ogni salvataggio è un commit sul repository; Vercel ripubblica il sito in un paio di minuti.
+export const prerender = false;
+
+const q = Astro.url.searchParams;
+const ready = isConfigured() && hasToken();
+const logged = ready && isLoggedIn(Astro.cookies);
+
+let news: NewsForm[] = [];
+let loadError = '';
+if (logged) {
+  try {
+    news = (await listNewsFiles())
+      .map((f) => fromMarkdown(f.name.replace(/\.md$/, ''), f.text))
+      .filter((n) => n.slug !== 'esempio')
+      .sort((a, b) => b.date.localeCompare(a.date));
+  } catch (e) {
+    loadError = 'Non riesco a leggere le news in questo momento. Riprova tra un minuto.';
+    console.error('admin list failed', String(e).slice(0, 300));
+  }
+}
+
+const editing = news.find((n) => n.slug === q.get('modifica'));
+const today = new Date().toISOString().slice(0, 10);
+const form: NewsForm = editing ?? {
+  slug: '', title: '', summary: '', date: today, eventDate: '', cover: '', coverAlt: '', draft: false, body: '',
+};
+// L'anteprima passa dal server: vale anche per una foto appena salvata e non ancora pubblicata.
+const coverUrl = form.cover
+  ? `/api/admin/foto?path=${encodeURIComponent(`src/${form.cover.replace(/^(\.\.\/)+/, '')}`)}`
+  : '';
+const fmt = (d: string) =>
+  d ? new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d)) : '';
+
+const saved = q.get('salvato');
+const deleted = q.get('cancellato');
+const error = q.get('errore') === 'password' ? 'Password sbagliata.' : q.get('errore');
+Astro.response.headers.set('cache-control', 'no-store');
+Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Pannello · Lombardi Wine Experience</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="adm">
+    <header class="adm__top">
+      <a href="/" class="adm__brand">Lombardi <span>Wine Experience</span></a>
+      {
+        logged && (
+          <form method="post" action="/api/admin/logout">
+            <button class="adm__link" type="submit">Esci</button>
+          </form>
+        )
+      }
+    </header>
+
+    <main class="adm__main">
+      {
+        !ready ? (
+          <section class="adm__box">
+            <h1>Pannello non ancora attivo</h1>
+            <p>Su Vercel servono due impostazioni: <code>ADMIN_PASSWORD</code> (almeno 8 caratteri) e <code>GITHUB_TOKEN</code>.</p>
+          </section>
+        ) : !logged ? (
+          <section class="adm__box adm__login">
+            <h1>Pannello</h1>
+            <form method="post" action="/api/admin/login">
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
+              {error && <p class="adm__error" role="alert">{error}</p>}
+              <button class="adm__button" type="submit">Entra</button>
+            </form>
+          </section>
+        ) : (
+          <div class="adm__grid">
+            <aside class="adm__list">
+              <div class="adm__list-head">
+                <h1>News ed eventi</h1>
+                {editing && <a class="adm__link" href="/admin">+ Nuova</a>}
+              </div>
+              {loadError && <p class="adm__error">{loadError}</p>}
+              {news.length === 0 && !loadError && <p class="adm__muted">Ancora nessuna news.</p>}
+              <ul>
+                {news.map((n) => (
+                  <li class={n.slug === form.slug ? 'is-current' : ''}>
+                    <a href={`/admin?modifica=${encodeURIComponent(n.slug)}`}>
+                      <span class="adm__item-title">{n.title}</span>
+                      <span class="adm__muted">
+                        {n.eventDate ? `Evento del ${fmt(n.eventDate)}` : fmt(n.date)}
+                        {n.draft && ' · bozza'}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+
+            <section class="adm__box">
+              <h2>{editing ? 'Modifica' : 'Nuova news o evento'}</h2>
+              {saved && (
+                <p class="adm__ok" role="status">
+                  Salvato. Il sito si aggiorna in un paio di minuti.
+                </p>
+              )}
+              {deleted && <p class="adm__ok" role="status">Cancellato. Il sito si aggiorna in un paio di minuti.</p>}
+              {error && <p class="adm__error" role="alert">{error}</p>}
+
+              <form id="news-form" method="post" action="/api/admin/save" enctype="multipart/form-data">
+                <input type="hidden" name="slug" value={form.slug} />
+                <input type="hidden" name="cover" value={form.cover} />
+
+                <label for="title">Titolo</label>
+                <input id="title" name="title" required maxlength="120" value={form.title} />
+
+                <label for="summary">Breve descrizione</label>
+                <p class="adm__hint">Una o due frasi: compaiono sotto il titolo, nell’elenco.</p>
+                <textarea id="summary" name="summary" required maxlength="280" rows="3">{form.summary}</textarea>
+
+                <label for="photo">Foto</label>
+                {coverUrl && (
+                  <div class="adm__current">
+                    <img src={coverUrl} alt="" />
+                    <label class="adm__check"><input type="checkbox" name="removePhoto" /> Togli la foto</label>
+                  </div>
+                )}
+                <p class="adm__hint">Meglio orizzontale. Quella del telefono va bene: la riduciamo noi.</p>
+                <input id="photo" name="photo" type="file" accept="image/*" />
+                <img id="photo-preview" class="adm__preview" alt="" hidden />
+
+                <label for="coverAlt">Cosa si vede nella foto</label>
+                <p class="adm__hint">Una frase per chi non vede le immagini, per esempio «Calici sul tavolo del torchio».</p>
+                <input id="coverAlt" name="coverAlt" maxlength="160" value={form.coverAlt} />
+
+                <div class="adm__row">
+                  <div>
+                    <label for="date">Data di pubblicazione</label>
+                    <input id="date" name="date" type="date" required value={form.date} />
+                  </div>
+                  <div>
+                    <label for="eventDate">Data dell’evento</label>
+                    <input id="eventDate" name="eventDate" type="date" value={form.eventDate} />
+                  </div>
+                </div>
+
+                <label for="body">Descrizione</label>
+                <p class="adm__hint">Facoltativa: è il testo della pagina dell’evento. Lascia una riga vuota tra un paragrafo e l’altro.</p>
+                <textarea id="body" name="body" rows="9">{form.body}</textarea>
+
+                <label class="adm__check"><input type="checkbox" name="draft" checked={form.draft} /> Bozza: non pubblicarla ancora</label>
+
+                <div class="adm__actions">
+                  <button class="adm__button" type="submit">Salva</button>
+                  {editing && <a class="adm__link" href={`/news/${form.slug}/`} target="_blank" rel="noopener">Vedi sul sito</a>}
+                </div>
+              </form>
+
+              {editing && (
+                <form method="post" action="/api/admin/delete" class="adm__delete" data-confirm={`Cancellare «${form.title}»?`}>
+                  <input type="hidden" name="slug" value={form.slug} />
+                  <button class="adm__link adm__danger" type="submit">Cancella questa news</button>
+                </form>
+              )}
+            </section>
+          </div>
+        )
+      }
+    </main>
+
+    <script>
+      // La foto si riduce nel browser (lato lungo 2400 px, JPEG): resta sotto il limite di Vercel e
+      // perde i dati nascosti dello scatto, come la posizione.
+      const MAX = 2400;
+
+      async function shrink(file: File): Promise<Blob> {
+        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
+        canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        return new Promise((resolve, reject) =>
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('foto'))), 'image/jpeg', 0.85)
+        );
+      }
+
+      const form = document.getElementById('news-form') as HTMLFormElement | null;
+      const photo = document.getElementById('photo') as HTMLInputElement | null;
+      const preview = document.getElementById('photo-preview') as HTMLImageElement | null;
+
+      photo?.addEventListener('change', () => {
+        const file = photo.files?.[0];
+        if (!preview) return;
+        preview.hidden = !file;
+        if (file) preview.src = URL.createObjectURL(file);
+      });
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const button = form.querySelector('button[type=submit]') as HTMLButtonElement;
+        button.disabled = true;
+        button.textContent = 'Salvo…';
+        const data = new FormData(form);
+        const file = photo?.files?.[0];
+        try {
+          if (file) data.set('photo', await shrink(file), 'foto.jpg');
+          else data.delete('photo');
+        } catch {
+          alert('Questa foto non si riesce a leggere: prova a salvarla come JPEG e riprova.');
+          button.disabled = false;
+          button.textContent = 'Salva';
+          return;
+        }
+        const res = await fetch(form.action, { method: 'POST', body: data });
+        location.href = res.url;
+      });
+
+      document.querySelectorAll<HTMLFormElement>('form[data-confirm]').forEach((f) =>
+        f.addEventListener('submit', (e) => {
+          if (!confirm(f.dataset.confirm)) e.preventDefault();
+        })
+      );
+    </script>
+
+    <style>
+      .adm [hidden] {
+        display: none !important;
+      }
+      .adm {
+        min-height: 100vh;
+        background: var(--calce);
+        color: var(--testo);
+        font-family: var(--font-text);
+      }
+      .adm__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.1rem var(--gutter);
+        border-bottom: 1px solid var(--pietra);
+      }
+      .adm__brand {
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        color: var(--inchiostro);
+        text-decoration: none;
+      }
+      .adm__brand span {
+        font-style: italic;
+      }
+      .adm__main {
+        max-width: 68rem;
+        margin: 0 auto;
+        padding: 2.5rem var(--gutter) 5rem;
+      }
+      .adm h1,
+      .adm h2 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        color: var(--inchiostro);
+        line-height: 1.1;
+      }
+      .adm h1 {
+        font-size: 2rem;
+      }
+      .adm h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+      }
+      .adm__grid {
+        display: grid;
+        gap: 2.5rem;
+      }
+      @media (min-width: 56em) {
+        .adm__grid {
+          grid-template-columns: 18rem 1fr;
+          align-items: start;
+        }
+      }
+      .adm__box {
+        background: #fbf9f5;
+        border: 1px solid var(--calce-scura);
+        padding: clamp(1.25rem, 3vw, 2rem);
+      }
+      .adm__login {
+        max-width: 24rem;
+        margin: 4rem auto 0;
+      }
+      .adm__list-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+      }
+      .adm__list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border-top: 1px solid var(--pietra);
+      }
+      .adm__list li a {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.8rem 0.25rem;
+        border-bottom: 1px solid var(--pietra);
+        color: var(--inchiostro);
+        text-decoration: none;
+      }
+      .adm__list li.is-current a,
+      .adm__list li a:hover {
+        background: var(--calce-scura);
+      }
+      .adm__item-title {
+        font-weight: 500;
+      }
+      .adm label {
+        display: block;
+        margin-top: 1.25rem;
+        font-weight: 500;
+        color: var(--inchiostro);
+      }
+      .adm__hint,
+      .adm__muted {
+        font-size: 0.875rem;
+        color: var(--testo-tenue);
+        margin: 0.15rem 0 0;
+      }
+      .adm input:not([type='checkbox']),
+      .adm textarea {
+        width: 100%;
+        margin-top: 0.4rem;
+        padding: 0.65rem 0.75rem;
+        font: inherit;
+        color: var(--inchiostro);
+        background: #fff;
+        border: 1px solid var(--pietra);
+        border-radius: 2px;
+      }
+      .adm input:focus-visible,
+      .adm textarea:focus-visible {
+        outline: 2px solid var(--vino);
+        outline-offset: 1px;
+      }
+      .adm__row {
+        display: grid;
+        gap: 0 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      }
+      .adm__check {
+        display: flex !important;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 400 !important;
+      }
+      .adm__current {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+      .adm__current img,
+      .adm__preview {
+        width: 9rem;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        margin-top: 0.5rem;
+      }
+      .adm__current .adm__check {
+        margin: 0;
+      }
+      .adm__actions {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-top: 2rem;
+      }
+      .adm__button {
+        padding: 0.75rem 1.6rem;
+        font: inherit;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--calce);
+        background: var(--vino);
+        border: 0;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      .adm__button:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .adm__login .adm__button {
+        margin-top: 1.25rem;
+      }
+      .adm__link {
+        font: inherit;
+        color: var(--vino);
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+      }
+      .adm__delete {
+        margin-top: 2.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--pietra);
+      }
+      .adm__danger {
+        color: var(--testo-tenue);
+      }
+      .adm__ok,
+      .adm__error {
+        padding: 0.7rem 0.9rem;
+        margin: 0 0 1rem;
+        font-size: 0.95rem;
+      }
+      .adm__ok {
+        background: #e7ebde;
+        color: var(--ulivo-scuro);
+      }
+      .adm__error {
+        background: #f1dfe1;
+        color: var(--vino-scuro);
+      }
+      .adm code {
+        font-size: 0.9em;
+      }
+    </style>
+  </body>
+</html>
