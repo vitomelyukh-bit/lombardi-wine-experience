@@ -163,10 +163,29 @@ Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
                 <label class="adm__check"><input type="checkbox" name="draft" checked={form.draft} /> Bozza: non pubblicarla ancora</label>
 
                 <div class="adm__actions">
+                  <button class="adm__button adm__button--ghost" type="button" id="preview-open">Anteprima</button>
                   <button class="adm__button" type="submit">Salva</button>
                   {editing && <a class="adm__link" href={`/news/${form.slug}/`} target="_blank" rel="noopener">Vedi sul sito</a>}
                 </div>
               </form>
+
+              <div class="pv" id="preview" hidden role="dialog" aria-modal="true" aria-labelledby="pv-title">
+                <div class="pv__bar">
+                  <p id="pv-title" class="pv__title">Anteprima</p>
+                  <div class="pv__switch" role="group" aria-label="Dimensione">
+                    <button type="button" data-size="desktop" aria-pressed="true">Computer</button>
+                    <button type="button" data-size="mobile" aria-pressed="false">Telefono</button>
+                  </div>
+                  <div class="pv__actions">
+                    <button type="button" class="adm__link pv__light" id="preview-close">Torna a modificare</button>
+                    <button type="button" class="adm__button" id="preview-publish">Pubblica</button>
+                  </div>
+                </div>
+                <div class="pv__stage" data-size="desktop">
+                  <p class="pv__loading" id="preview-loading">Preparo l’anteprima…</p>
+                  <iframe id="preview-frame" title="Anteprima della news"></iframe>
+                </div>
+              </div>
 
               {editing && (
                 <form method="post" action="/api/admin/delete" class="adm__delete" data-confirm={`Cancellare «${form.title}»?`}>
@@ -208,25 +227,80 @@ Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
         if (file) preview.src = URL.createObjectURL(file);
       });
 
-      form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const button = form.querySelector('button[type=submit]') as HTMLButtonElement;
+      // La foto ridotta si calcola una volta sola, per l'anteprima e per il salvataggio.
+      let shrunk: { file: File; blob: Blob } | null = null;
+      async function collect(): Promise<FormData> {
+        const data = new FormData(form!);
+        const file = photo?.files?.[0];
+        if (file) {
+          if (shrunk?.file !== file) shrunk = { file, blob: await shrink(file) };
+          data.set('photo', shrunk.blob, 'foto.jpg');
+        } else data.delete('photo');
+        return data;
+      }
+
+      async function save() {
+        const button = form!.querySelector('button[type=submit]') as HTMLButtonElement;
         button.disabled = true;
         button.textContent = 'Salvo…';
-        const data = new FormData(form);
-        const file = photo?.files?.[0];
         try {
-          if (file) data.set('photo', await shrink(file), 'foto.jpg');
-          else data.delete('photo');
+          const res = await fetch(form!.action, { method: 'POST', body: await collect() });
+          location.href = res.url;
         } catch {
-          alert('Questa foto non si riesce a leggere: prova a salvarla come JPEG e riprova.');
+          alert('Non sono riuscito a salvare: controlla la foto o la connessione e riprova.');
           button.disabled = false;
           button.textContent = 'Salva';
+        }
+      }
+
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (form.reportValidity()) void save();
+      });
+
+      const pv = document.getElementById('preview');
+      const frame = document.getElementById('preview-frame') as HTMLIFrameElement | null;
+      const loading = document.getElementById('preview-loading');
+      const stage = pv?.querySelector<HTMLElement>('.pv__stage');
+
+      document.getElementById('preview-open')?.addEventListener('click', async () => {
+        if (!form?.reportValidity() || !pv || !frame) return;
+        const draft = (form.querySelector('input[name=draft]') as HTMLInputElement).checked;
+        document.getElementById('preview-publish')!.textContent = draft ? 'Salva come bozza' : 'Pubblica';
+        pv.hidden = false;
+        document.body.style.overflow = 'hidden';
+        loading!.hidden = false;
+        frame.srcdoc = '';
+        try {
+          const res = await fetch('/admin/anteprima', { method: 'POST', body: await collect() });
+          frame.srcdoc = await res.text();
+        } catch {
+          loading!.textContent = 'Non riesco a preparare l’anteprima. Riprova.';
           return;
         }
-        const res = await fetch(form.action, { method: 'POST', body: data });
-        location.href = res.url;
+        loading!.hidden = true;
       });
+
+      const closePreview = () => {
+        if (pv) pv.hidden = true;
+        document.body.style.overflow = '';
+      };
+      document.getElementById('preview-close')?.addEventListener('click', closePreview);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && pv && !pv.hidden) closePreview();
+      });
+      document.getElementById('preview-publish')?.addEventListener('click', () => {
+        closePreview();
+        void save();
+      });
+      pv?.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((b) =>
+        b.addEventListener('click', () => {
+          stage!.dataset.size = b.dataset.size!;
+          pv.querySelectorAll('[data-size]').forEach((x) =>
+            x.setAttribute('aria-pressed', String(x === b))
+          );
+        })
+      );
 
       document.querySelectorAll<HTMLFormElement>('form[data-confirm]').forEach((f) =>
         f.addEventListener('submit', (e) => {
@@ -440,6 +514,86 @@ Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
       }
       .adm code {
         font-size: 0.9em;
+      }
+      .adm__button--ghost {
+        color: var(--vino);
+        background: transparent;
+        box-shadow: inset 0 0 0 1px var(--vino);
+      }
+
+      /* Anteprima: una finestra sopra il pannello, a misura di computer o di telefono */
+      .pv {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        background: var(--ulivo-scuro);
+      }
+      .pv__bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem 1.5rem;
+        padding: 0.75rem var(--gutter);
+        color: var(--calce);
+      }
+      .pv__title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+      }
+      .pv__switch {
+        display: inline-flex;
+        border: 1px solid color-mix(in srgb, var(--calce) 45%, transparent);
+      }
+      .pv__switch button {
+        padding: 0.4rem 0.9rem;
+        font: inherit;
+        font-size: 0.9rem;
+        color: var(--calce);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+      }
+      .pv__switch button[aria-pressed='true'] {
+        color: var(--ulivo-scuro);
+        background: var(--calce);
+      }
+      .pv__actions {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+      }
+      .pv__light {
+        color: var(--calce);
+      }
+      .pv__stage {
+        position: relative;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+        padding: 0 var(--gutter) var(--gutter);
+      }
+      .pv__stage iframe {
+        width: 100%;
+        max-width: 90rem;
+        height: 100%;
+        border: 0;
+        background: var(--calce);
+      }
+      .pv__stage[data-size='mobile'] iframe {
+        width: 390px;
+        max-width: 100%;
+        border-radius: 1.25rem;
+        box-shadow: 0 0 0 8px #1d1f18;
+      }
+      .pv__loading {
+        position: absolute;
+        top: 2rem;
+        color: var(--calce);
       }
     </style>
   </body>

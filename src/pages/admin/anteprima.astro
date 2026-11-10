@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import News from '../../components/News.astro';
+import NewsArticle from '../../components/NewsArticle.astro';
+import { isLoggedIn } from '../../lib/admin/auth';
+import { previewHtml } from '../../lib/admin/preview-markdown';
+
+// Anteprima di una news dal pannello, prima di salvarla: la scheda nell'elenco e la pagina, con gli
+// stessi componenti e stili del sito. Riceve il modulo (foto già ridotta dal browser) e non salva
+// niente. Il pannello la mostra in un riquadro, a misura di computer o di telefono.
+export const prerender = false;
+
+if (Astro.request.method !== 'POST' || !isLoggedIn(Astro.cookies)) {
+  return new Response('Non autorizzato', { status: 401 });
+}
+
+const f = await Astro.request.formData();
+const text = (k: string) => String(f.get(k) ?? '').trim();
+const day = (v: string) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00Z`) : undefined);
+
+let cover: string | undefined;
+const photo = f.get('photo');
+if (photo instanceof File && photo.size > 0 && photo.size < 5 * 1024 * 1024) {
+  cover = `data:image/jpeg;base64,${Buffer.from(await photo.arrayBuffer()).toString('base64')}`;
+} else if (text('cover') && !f.get('removePhoto')) {
+  cover = `/api/admin/foto?path=${encodeURIComponent(`src/${text('cover').replace(/^(\.\.\/)+/, '')}`)}`;
+}
+
+const item = {
+  id: 'anteprima',
+  data: {
+    title: text('title') || 'Titolo della news',
+    date: day(text('date')) ?? new Date(),
+    eventDate: day(text('eventDate')),
+    summary: text('summary') || 'Breve descrizione.',
+    cover,
+    coverAlt: text('coverAlt'),
+  },
+};
+Astro.response.headers.set('cache-control', 'no-store');
+---
+
+<BaseLayout title={`Anteprima · ${item.data.title}`} description={item.data.summary} noindex>
+  <p class="preview-note">Anteprima: nell’elenco degli eventi, in home</p>
+  <News items={[item]} />
+  <p class="preview-note">Anteprima: la pagina dell’evento</p>
+  <NewsArticle {...item.data}>
+    <Fragment set:html={previewHtml(String(f.get('body') ?? ''))} />
+  </NewsArticle>
+</BaseLayout>
+
+<style is:global>
+  /* Nell'anteprima i link non portano da nessuna parte. */
+  a {
+    pointer-events: none;
+  }
+  .preview-note {
+    max-width: none;
+    margin: 0;
+    padding: 0.6rem var(--gutter);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    color: var(--calce);
+    background: var(--ulivo-scuro);
+  }
+</style>
