@@ -71,6 +71,11 @@ breve descrizione, foto con la frase «cosa si vede», data, data dell'evento, d
 
 - Ogni salvataggio è **un commit su main** (API di GitHub): `src/content/news/<indirizzo>.md` e la
   foto in `src/assets/images/news/<indirizzo>/`. Vercel ripubblica il sito in un paio di minuti.
+- «Anteprima» (prima di salvare) mostra la scheda nell'elenco e la pagina dell'evento, a misura di
+  computer o di telefono, da `src/pages/admin/anteprima.astro`: usa gli stessi componenti del sito
+  (`News` con la prop `items`, `NewsArticle`), non salva niente. Il testo lo converte
+  `src/lib/admin/preview-markdown.ts` (paragrafi, elenchi, titoletti, grassetto, corsivo, link):
+  se il sito comincia a usare altro Markdown, aggiungerlo lì.
 - La foto la riduce il browser prima di caricarla (lato lungo 2400 px, JPEG): resta sotto il limite
   di Vercel (4,5 MB) e perde i dati dello scatto, posizione compresa.
 - Impostazioni su Vercel: `ADMIN_PASSWORD` (almeno 8 caratteri) e `GITHUB_TOKEN` (token
